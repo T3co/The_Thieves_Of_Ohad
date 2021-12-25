@@ -2,7 +2,7 @@
 
 void setup() {
   Serial.begin(115200);
-  //testing
+  //testing V2
 }
 
 void loop() {
