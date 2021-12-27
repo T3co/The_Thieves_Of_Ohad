@@ -4,7 +4,7 @@
 #define echoPin 12
 #define trigPin 25
 
-int distance = -100;
+int distance;
 int serRot;
 long duration;
 
@@ -12,8 +12,8 @@ long duration;
 #define piezoPin 27
 #define pRes 8
 
-int degreeToDist [180];
-void returnToPoint(int _point);
+int degreeToDist[180];
+void returnToPoint();
 
 #define LED 26
 
@@ -24,32 +24,34 @@ int indexofSmallestElement();
 Servo myservo;
 
 void setup()
- {
-    ESP32PWM::allocateTimer(1);
-    ESP32PWM::allocateTimer(2);
-    ESP32PWM::allocateTimer(3);
-    ESP32PWM::allocateTimer(0);
-
+{
     Serial.begin(115200);
 
-    //piezo
-    ledcSetup(pChannel,5000, pRes);  
+    ledcSetup(pChannel, 5000, pRes);
     ledcAttachPin(piezoPin, pChannel);
 
-    //super sonic thingi 
     pinMode(trigPin, OUTPUT);
     pinMode(echoPin, INPUT);
-    pinMode(LED,OUTPUT);
+    pinMode(LED, OUTPUT);
 
-    //servo
     myservo.attach(32);
+
+    myservo.write(0);
 }
-void TurnServo(){
+void TurnServo()
+{
     for (int i = 0; i < 180; i++)
     {
+        degreeToDist[i] = dist();
         myservo.write(i);
         serRot = i;
-        delay(30);
+
+        //Serial.print("Angle is:");
+        //Serial.println(i);
+        //Serial.print("Distance is:");
+        //Serial.println(distance);
+
+        delay(20);
     }
 }
 
@@ -57,35 +59,32 @@ void returnToPoint()
 {
     int deg = indexofSmallestElement();
     myservo.write(deg);
-          digitalWrite(LED, HIGH);
-        ledcWriteTone(pChannel, 7000);
-            delay(10);
-          digitalWrite(LED, LOW);
-        ledcWriteTone(pChannel, 0);
-            delay(1000);
-
+    delay(1000);
+    //ESP.restart();
 }
 
-void loop() {
+void loop()
+{
     TurnServo();
-    Serial.println(dist());
+    distance = dist();
 
-        degreeToDist[i] = dist();
+    if (serRot > 175)
+    {
+        digitalWrite(LED, HIGH);
 
-        if(serRot > 175)
-        {
-            digitalWrite(LED, HIGH);
-            ledcWriteTone(pChannel, 7000);
-            delay(1000);
-            digitalWrite(LED, LOW);
-            ledcWriteTone(pChannel, 0);
+        ledcWriteTone(pChannel, 7000);
 
-            returnToPoint(degreeToDist[indexofSmallestElement()]);
-        }
+        delay(1000);
+        
+        digitalWrite(LED, LOW);
+
+        ledcWriteTone(pChannel, 0);
+
+        returnToPoint();
+    }
 }
-
-int dist(){
-
+int dist()
+{
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
@@ -94,20 +93,28 @@ int dist(){
     duration = pulseIn(echoPin, HIGH);
     distance = duration * 0.034 / 2;
 
-    if(distance > 100){
+    if (distance > 100)
+    {
         return 100;
     }
-    return distance;
+    else if (distance <= 10)
+    {
+        return 10;
+    }
+    else if (distance > 10 && distance < 100)
+    {
+        return distance;
+    }
 }
 
 int indexofSmallestElement()
 {
     int index = 0;
 
-    for(int i = 1; i < 180; i++)
+    for (int i = 1; i < 180; i++)
     {
-        if(degreeToDist[i] < degreeToDist[index])
-            index = i;              
+        if (degreeToDist[i] < degreeToDist[index])
+            index = i;
     }
 
     return index;
