@@ -1,2 +1,2 @@
-# The_Thieves_Of_Ohad_QuadCopter
+# The_Thieves_Of_Ohad
 תחרות רפנים של משרד החינוך(עבודה עם esp32 ורכיבים)
